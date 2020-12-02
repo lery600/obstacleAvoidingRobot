@@ -1,0 +1,158 @@
+#include <Arduino.h>
+
+#define RF 5  //A-1A
+#define RB 6  //A-1B
+#define LF 11  //B-1A
+#define LB 10 //B-1B
+
+#define Rbutton A0
+#define Lbutton A1
+#define distancepin 3
+int rotdelay = 500;
+int snaketime = 0;
+
+int directionFlag = 0;
+int reverseFlag = 0;
+ 
+
+void setup() {   
+  pinMode(Rbutton, INPUT);
+  pinMode(Lbutton, INPUT);   
+}
+
+void turnleft(){
+analogWrite(RF, 250);
+analogWrite(RB, 0);
+analogWrite(LF, 0);
+analogWrite(LB, 250);
+delay(rotdelay);
+}
+void turnright(){
+analogWrite(RF, 0);
+analogWrite(RB, 250);
+analogWrite(LF, 250);
+analogWrite(LB, 0);
+delay(rotdelay);
+}
+ void turnaroundR(){
+analogWrite(RF, 0);
+analogWrite(RB, 250);
+analogWrite(LF, 250);
+analogWrite(LB, 0);
+delay(rotdelay*2);
+}
+void turnaroundL(){
+analogWrite(RF, 250);
+analogWrite(RB, 0);
+analogWrite(LF, 0);
+analogWrite(LB, 250);
+delay(rotdelay*2);
+}
+void moveforward(){  
+analogWrite(RF, 250);
+analogWrite(RB, 0);
+analogWrite(LF, 250);
+analogWrite(LB, 0);
+}
+void movebackward(){
+analogWrite(RF, 250);
+analogWrite(RB, 0);
+analogWrite(LF, 250);
+analogWrite(LB, 0);
+delay(rotdelay);
+}
+
+   void snake1(){
+   //delay(900);
+   digitalRead(distancepin);
+       
+       
+       while(!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700){                  
+                  moveforward();                                   
+       }
+       
+      if (digitalRead(distancepin)){ turnleft(); directionFlag=1; return directionFlag;}
+        movebackward();
+        turnleft();
+        directionFlag=1;
+        return directionFlag;  
+   }
+
+    void snake2(){
+    //delay(900);
+    digitalRead(distancepin);
+
+      while(!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700 && snaketime <= 2500){
+                  moveforward();                 
+                  snaketime++;                
+      }  
+      if (snaketime >= 2500) {reverseFlag--;}
+      if ( analogRead(Lbutton) >= 700 && analogRead(Rbutton) >= 700){movebackward();}
+      if (!digitalRead(distancepin)){reverseFlag++; turnleft(); directionFlag=2; return directionFlag;}  
+      if (digitalRead(distancepin)){reverseFlag++; turnleft(); directionFlag=2; return directionFlag;}
+       
+    }
+      void snake3(){
+    //delay(900);
+    digitalRead(distancepin);
+      
+       while(!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700){
+                  moveforward();                  
+       }
+      
+      if (digitalRead(distancepin)){ turnright(); directionFlag=3; return directionFlag;}
+       movebackward();
+        turnright();
+        directionFlag=3;
+        return directionFlag;  
+   }  
+  
+    void snake4(){
+      //delay(900);
+      digitalRead(distancepin);
+      
+     
+      while(!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700 && snaketime <= 2500){
+                  moveforward();                 
+                  snaketime++; 
+                   
+      }
+      if (snaketime >= 2500) {reverseFlag--;}
+      if ( analogRead(Lbutton) >= 700 && analogRead(Rbutton) >= 700){movebackward();}
+      if (!digitalRead(distancepin)){reverseFlag++;  turnright(); directionFlag=0; return directionFlag;}  
+      if (digitalRead(distancepin)){reverseFlag++;  turnright(); directionFlag=0; return directionFlag;}
+           
+  } 
+  void gotstuckL(){
+    delay(500);
+    if (!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700){return;}
+      turnaroundL();
+      reverseFlag = 0;
+    
+   }
+   void gotstuckR(){
+    delay(500);
+    if (!digitalRead(distancepin) && analogRead(Lbutton) <= 700 && analogRead(Rbutton) <= 700){return;}
+      turnaroundR();
+      reverseFlag = 0;
+    
+   }
+void loop() {
+   
+  
+   if (directionFlag == 0){snake1();}
+                                                                   
+   snaketime = 0;                                                                     //preparing to count for the next cycle of the "snake" pattern
+   
+   if(directionFlag == 1){snake2();}
+   if (reverseFlag >= 3){gotstuckL();}
+   
+   
+   if (directionFlag == 2){snake3();}   
+   
+    snaketime = 0;
+    
+    if(directionFlag == 3){snake4();}
+    if (reverseFlag >= 3){gotstuckR();} 
+    
+}
